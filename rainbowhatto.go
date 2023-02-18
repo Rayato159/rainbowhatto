@@ -8,12 +8,13 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-type Algorithm string
-
-const (
-	HMAC Algorithm = "HMAC"
-	RSA  Algorithm = "RSA"
-)
+// Sign algorithm
+func HMAC() src.SignAlgorithm {
+	return src.HMAC
+}
+func RSA() src.SignAlgorithm {
+	return src.RSA
+}
 
 type Config struct {
 	// The secret that means a file of .pem key or key in dicectly
@@ -24,9 +25,6 @@ type Config struct {
 
 type rainbow struct {
 	// The secret that means a file of .pem key or key in dicectly
-	ExpiresAt src.IToken // Required
-	Secret    src.IToken // Required
-	Claims    src.IToken // Optional
 	src.Token
 }
 
@@ -35,16 +33,16 @@ type rsaToken struct {
 	src.Token
 }
 
-func newRSAToken(rw *rainbow) src.IToken {
+func newRSAToken(rw rainbow) src.IToken {
 	return &rsaToken{
 		Token: src.Token{
-			SignAlgorithm: src.RSA,
-			ExpiresAt:     rw.GetExpiresAt(),
+			SignAlgorithm: rw.Token.GetSignAlgorithm(),
+			ExpiresAt:     rw.Token.GetExpiresAt(),
 			Key: &src.Key{
-				PrivateKey: rw.Key.GetPrivateKey(),
-				PublicKey:  rw.Key.GetPublicKey(),
+				PrivateKey: rw.Token.Key.GetPrivateKey(),
+				PublicKey:  rw.Token.Key.GetPublicKey(),
 			},
-			Claims: rw.GetClaims(),
+			Claims: rw.Token.GetClaims(),
 		},
 	}
 }
@@ -54,15 +52,15 @@ type hmacToken struct {
 }
 
 // HMAC Concrete
-func newHMACKToken(rw *rainbow) src.IToken {
+func newHMACToken(rw rainbow) src.IToken {
 	return &hmacToken{
 		Token: src.Token{
-			SignAlgorithm: src.HMAC,
-			ExpiresAt:     rw.GetExpiresAt(),
+			SignAlgorithm: rw.Token.GetSignAlgorithm(),
+			ExpiresAt:     rw.Token.GetExpiresAt(),
 			Key: &src.Key{
-				CommonKey: rw.Key.GetCommonKey(),
+				CommonKey: rw.Token.Key.GetCommonKey(),
 			},
-			Claims: rw.GetClaims(),
+			Claims: rw.Token.GetClaims(),
 		},
 	}
 }
@@ -72,19 +70,27 @@ type parseToken struct {
 }
 
 // Factory
-func BuildToken(tt Algorithm, cfg Config) (src.IToken, error) {
-	rw := new(rainbow)
-	rw.ExpiresAt.SetExpiresAt(cfg.ExpiresAt)
-	rw.Secret.SetSecret(cfg.Secret)
-	rw.Claims.SetClaims(cfg.Claims)
-
-	switch tt {
-	case HMAC:
-		return newHMACKToken(rw), nil
-	case RSA:
-		return newRSAToken(rw), nil
+func BuildToken(alg src.SignAlgorithm, cfg Config) src.IToken {
+	rw := rainbow{
+		src.Token{
+			SignAlgorithm: alg,
+			ExpiresAt:     &jwt.NumericDate{},
+			Claims:        &src.NewClaims{},
+			Key:           &src.Key{},
+		},
 	}
-	return nil, fmt.Errorf("init token error")
+	rw.Token.SetExpiresAt(cfg.ExpiresAt)
+	rw.Token.SetSecret(cfg.Secret)
+	rw.Token.SetClaims(cfg.Claims)
+
+	switch alg {
+	case src.HMAC:
+		return newHMACToken(rw)
+	case src.RSA:
+		return newRSAToken(rw)
+	default:
+		panic("init token error")
+	}
 }
 
 type Claims struct {
@@ -101,8 +107,10 @@ func ReverseHMACToken(token string, secret string) (*Claims, error) {
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenMalformed) {
 			return nil, fmt.Errorf("token format is invalid")
-		} else if errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrTokenNotValidYet) {
+		} else if errors.Is(err, jwt.ErrTokenExpired) {
 			return nil, fmt.Errorf("token had expired")
+		} else {
+			return nil, fmt.Errorf("parse token error: %v", err)
 		}
 	}
 
@@ -128,8 +136,10 @@ func ReverseRSAToken(token string, path string) (*Claims, error) {
 	if err != nil {
 		if errors.Is(err, jwt.ErrTokenMalformed) {
 			return nil, fmt.Errorf("token format is invalid")
-		} else if errors.Is(err, jwt.ErrTokenExpired) || errors.Is(err, jwt.ErrTokenNotValidYet) {
+		} else if errors.Is(err, jwt.ErrTokenExpired) {
 			return nil, fmt.Errorf("token had expired")
+		} else {
+			return nil, fmt.Errorf("parse token error: %v", err)
 		}
 	}
 

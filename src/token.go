@@ -17,6 +17,7 @@ type IToken interface {
 	SignToken() string
 	GetExpiresAt() *jwt.NumericDate
 	GetClaims() *NewClaims
+	GetSignAlgorithm() SignAlgorithm
 }
 
 type Token struct {
@@ -28,8 +29,8 @@ type Token struct {
 }
 
 type NewClaims struct {
-	Claims               any `json:"claims"`
-	jwt.RegisteredClaims `json:"registered"`
+	Claims any `json:"claims"`
+	jwt.RegisteredClaims
 }
 
 // Set
@@ -49,8 +50,9 @@ func (tk *Token) SetSecret(secret string) IKey {
 		tk.Key.SetPublicKey(secret)
 		tk.Key.SetPrivateKey(secret)
 		return tk.Key
+	default:
+		panic("invalid secret key format")
 	}
-	panic("invalid secret key format")
 }
 func (tk *Token) SetClaims(claims any) {
 	tk.Claims = &NewClaims{
@@ -75,6 +77,9 @@ func (tk *Token) GetExpiresAt() *jwt.NumericDate {
 }
 func (tk *Token) GetClaims() *NewClaims {
 	return tk.Claims
+}
+func (tk *Token) GetSignAlgorithm() SignAlgorithm {
+	return tk.SignAlgorithm
 }
 
 // Usecases
