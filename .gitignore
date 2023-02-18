@@ -31,5 +31,6 @@ go.work
 /app
 /test
 *.txt
+*.pem
 
 # End of https://www.toptal.com/developers/gitignore/api/go

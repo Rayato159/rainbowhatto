@@ -12,7 +12,7 @@ type IToken interface {
 	SetSignAlgorithm(alg SignAlgorithm)
 	SetExpiresAt(t int64)
 	SetRepeatExpiresAt(t int64)
-	SetSecret(secret string) IKey
+	SetSecret(secret string)
 	SetClaims(claims any)
 	SignToken() string
 	GetExpiresAt() *jwt.NumericDate
@@ -41,15 +41,12 @@ func (tk *Token) SetExpiresAt(t int64) {
 func (tk *Token) SetRepeatExpiresAt(t int64) {
 	tk.ExpiresAt = jwt.NewNumericDate(time.Unix(t, 0))
 }
-func (tk *Token) SetSecret(secret string) IKey {
+func (tk *Token) SetSecret(secret string) {
 	switch tk.SignAlgorithm {
 	case HMAC:
 		tk.Key.SetCommonKey(secret)
-		return tk.Key
 	case RSA:
-		tk.Key.SetPublicKey(secret)
 		tk.Key.SetPrivateKey(secret)
-		return tk.Key
 	default:
 		panic("invalid secret key format")
 	}
@@ -65,7 +62,7 @@ func (tk *Token) SetClaims(claims any) {
 			Subject:   "rainbowtoken",
 			Audience:  []string{"human"},
 			ExpiresAt: tk.GetExpiresAt(),
-			NotBefore: tk.GetExpiresAt(),
+			NotBefore: jwt.NewNumericDate(time.Now()),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}

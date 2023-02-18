@@ -29,18 +29,17 @@ func (k *Key) SetPublicKey(path string) {
 	if err != nil {
 		panic(fmt.Sprintf("pem private_key file reading error: %v", err))
 	}
-
 	// Decode the PEM data
 	block, _ := pem.Decode(pemData)
 
 	// Parse the RSA private key
-	publicKey, err := x509.ParsePKCS1PublicKey(block.Bytes)
+	publicKey, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
 		panic(fmt.Sprintf("pem public_key parsing error: %v", err))
 	}
 
 	// Convert the public key to RSA format
-	k.PublicKey = publicKey
+	k.PublicKey = publicKey.(*rsa.PublicKey)
 }
 func (k *Key) SetPrivateKey(path string) {
 	// Read the PEM file

@@ -20,7 +20,7 @@ type Config struct {
 	// The secret that means a file of .pem key or key in dicectly
 	ExpiresAt int64  // Required
 	Secret    string // Required
-	Claims    any    `json:"claims"` // Optional
+	Claims    any    // Optional
 }
 
 type rainbow struct {
@@ -40,7 +40,6 @@ func newRSAToken(rw rainbow) src.IToken {
 			ExpiresAt:     rw.Token.GetExpiresAt(),
 			Key: &src.Key{
 				PrivateKey: rw.Token.Key.GetPrivateKey(),
-				PublicKey:  rw.Token.Key.GetPublicKey(),
 			},
 			Claims: rw.Token.GetClaims(),
 		},
@@ -94,7 +93,7 @@ func BuildToken(alg src.SignAlgorithm, cfg Config) src.IToken {
 }
 
 type Claims struct {
-	*src.NewClaims
+	*src.NewClaims `json:"claims"`
 }
 
 func ReverseHMACToken(token string, secret string) (*Claims, error) {
