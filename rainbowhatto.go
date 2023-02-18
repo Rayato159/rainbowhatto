@@ -18,9 +18,18 @@ func RSA() src.SignAlgorithm {
 
 type Config struct {
 	// The secret that means a file of .pem key or key in dicectly
-	ExpiresAt int64  // Required
-	Secret    string // Required
-	Claims    any    // Optional
+	ExpiresAt int64 // Required
+	HMAC      *HMACConfig
+	RSA       *RSAConfig
+	Claims    any // Optional
+}
+
+type RSAConfig struct {
+	PrivateKey string // Required
+	PublicKey  string // Required
+}
+type HMACConfig struct {
+	Secret string // Required
 }
 
 type rainbow struct {
@@ -69,7 +78,7 @@ type parseToken struct {
 }
 
 // Factory
-func BuildToken(alg src.SignAlgorithm, cfg Config) src.IToken {
+func BuildToken(alg src.SignAlgorithm, cfg Config) (src.IToken, error) {
 	rw := rainbow{
 		src.Token{
 			SignAlgorithm: alg,
@@ -79,16 +88,92 @@ func BuildToken(alg src.SignAlgorithm, cfg Config) src.IToken {
 		},
 	}
 	rw.Token.SetExpiresAt(cfg.ExpiresAt)
-	rw.Token.SetSecret(cfg.Secret)
 	rw.Token.SetClaims(cfg.Claims)
 
 	switch alg {
 	case src.HMAC:
-		return newHMACToken(rw)
+		// Error catcher
+		if cfg.HMAC == nil {
+			return nil, fmt.Errorf("hmac key is nil")
+		}
+		if cfg.HMAC.Secret == "" {
+			return nil, fmt.Errorf("hmac key is missing")
+		}
+		// Sign
+		rw.Token.SetSecret(cfg.HMAC.Secret)
+		return newHMACToken(rw), nil
 	case src.RSA:
-		return newRSAToken(rw)
+		// Error catcher
+		if cfg.RSA == nil {
+			return nil, fmt.Errorf("rsa key is nil")
+		}
+		if cfg.RSA.PrivateKey == "" {
+			return nil, fmt.Errorf("private key is missing")
+		}
+		// Sign
+		rw.Token.SetSecret(cfg.RSA.PrivateKey)
+		return newRSAToken(rw), nil
 	default:
-		panic("init token error")
+		return nil, fmt.Errorf("sign token error: unknown sign algorithm")
+	}
+}
+
+func RefreshToken(alg src.SignAlgorithm, token string, cfg Config) (src.IToken, error) {
+	rw := rainbow{
+		src.Token{
+			SignAlgorithm: alg,
+			ExpiresAt:     &jwt.NumericDate{},
+			Claims:        &src.NewClaims{},
+			Key:           &src.Key{},
+		},
+	}
+
+	switch alg {
+	case src.HMAC:
+		// Error catcher
+		if cfg.HMAC == nil {
+			return nil, fmt.Errorf("hmac key is nil")
+		}
+		if cfg.HMAC.Secret == "" {
+			return nil, fmt.Errorf("hmac key is missing")
+		}
+		// Parse token
+		claims, err := ReverseHMACToken(token, cfg.HMAC.Secret)
+		if err != nil {
+			return nil, err
+		}
+		// Set expires
+		rw.Token.SetRepeatExpiresAt(claims.ExpiresAt.Unix())
+		// Set secret
+		rw.Token.SetSecret(cfg.HMAC.Secret)
+		rw.Token.SetClaims(cfg.Claims)
+		// Sign a new token
+		return newHMACToken(rw), nil
+	case src.RSA:
+		// Error catcher
+		if cfg.RSA == nil {
+			return nil, fmt.Errorf("rsa key is nil")
+		}
+		if cfg.RSA.PrivateKey == "" {
+			return nil, fmt.Errorf("private key is missing")
+		}
+		if cfg.RSA.PublicKey == "" {
+			return nil, fmt.Errorf("public key is missing")
+		}
+		// Parse token
+		claims, err := ReverseRSAToken(token, cfg.RSA.PublicKey)
+		if err != nil {
+			return nil, err
+		}
+		// Set expires
+		rw.Token.SetRepeatExpiresAt(claims.ExpiresAt.Unix())
+		// Set secret
+		rw.Token.SetSecret(cfg.RSA.PrivateKey)
+		rw.Token.SetClaims(cfg.Claims)
+		// Sign a new token
+		return newRSAToken(rw), nil
+	default:
+		return nil, fmt.Errorf("refresh token error: unknown sign algorithm")
 	}
 }
 
