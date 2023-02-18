@@ -77,16 +77,16 @@ IssuedAt:  time now,
 ```go
 func main() {
 	token := rainbowhatto.BuildToken(
-        rainbowhatto.HMAC(),
-        rainbowhatto.Config{
-            ExpiresAt: 86400,
-            Secret:    "super-secret",
-            Claims: claims{
-                Id:   "abdcefg1234",
-                Name: "rainbow",
-            },
-	    }
-    )
+		rainbowhatto.HMAC(),
+		rainbowhatto.Config{
+			ExpiresAt: 86400,
+			Secret:    "super-secret",
+			Claims: claims{
+				Id:   "abdcefg1234",
+				Name: "rainbow",
+			},
+		}
+	)
 	fmt.Println(token.SignToken())
 }
 ```
@@ -121,16 +121,16 @@ openssl rsa -in <file_name>.pem -pubout -out public.pem
 ```go
 func main() {
 	token := rainbowhatto.BuildToken(
-        rainbowhatto.RSA(),
-        rainbowhatto.Config{
-            ExpiresAt: 86400,
-            Secret:    "./private.pem", // Private key path
-            Claims: claims{
-                Id:   "abdcefg1234",
-                Name: "rainbow",
-            },
-	    }
-    )
+		rainbowhatto.RSA(),
+		rainbowhatto.Config{
+			ExpiresAt: 86400,
+			Secret:    "./private.pem", // Private key path
+			Claims: claims{
+				Id:   "abdcefg1234",
+				Name: "rainbow",
+			},
+		}
+	)
 	fmt.Println(token.SignToken())
 }
 ```
