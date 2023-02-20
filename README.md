@@ -77,7 +77,7 @@ IssuedAt:  time now,
 
 ```go
 func main() {
-	token, err = rainbowhatto.BuildToken(rainbowhatto.HMAC(), rainbowhatto.Config{
+	token, err := rainbowhatto.BuildToken(rainbowhatto.HMAC(), rainbowhatto.Config{
 		ExpiresAt: 86400,
 		HMAC: &rainbowhatto.HMACConfig{
 			Secret: "super-secret",
@@ -113,7 +113,7 @@ func main() {
 func main() {
     oldToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGFpbXMiOnsiSWQiOiJhYmRjZWZnMTIzNCIsIk5hbWUiOiJyYWluYm93In0sImlzcyI6InJhaW5ib3doYXR0byIsInN1YiI6InJhaW5ib3d0b2tlbiIsImF1ZCI6WyJodW1hbiJdLCJleHAiOjE2NzY4MjcxMzIsIm5iZiI6MTY3Njc0MDczMiwiaWF0IjoxNjc2NzQwNzMyLCJqdGkiOiJjZm9nZ3Y2bmRyYzBibjRyOGQ4MCJ9.lzBu_zRgtc0oTqkZyjatJu7u8PGeBXALcICdTf7zUcs"
 
-    newToken, err = rainbowhatto.RefreshToken(rainbowhatto.HMAC(), oldToken, rainbowhatto.Config{
+    newToken, err := rainbowhatto.RefreshToken(rainbowhatto.HMAC(), oldToken, rainbowhatto.Config{
 		ExpiresAt: 0,
 		HMAC: &rainbowhatto.HMACConfig{
 			Secret: "super-secret",
@@ -146,7 +146,7 @@ openssl rsa -in <file_name>.pem -pubout -out public.pem
 
 ```go
 func main() {
-	token, err = rainbowhatto.BuildToken(rainbowhatto.RSA(), rainbowhatto.Config{
+	token, err := rainbowhatto.BuildToken(rainbowhatto.RSA(), rainbowhatto.Config{
 		ExpiresAt: 86400,
 		RSA: &rainbowhatto.RSAConfig{
 			PrivateKey: "./private_key.pem",
@@ -182,7 +182,7 @@ func main() {
 func main() {
     oldToken := "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGFpbXMiOnsiSWQiOiJhYmRjZWZnMTIzNCIsIk5hbWUiOiJyYWluYm93In0sImlzcyI6InJhaW5ib3doYXR0byIsInN1YiI6InJhaW5ib3d0b2tlbiIsImF1ZCI6WyJodW1hbiJdLCJleHAiOjE2NzY4MjcxNTIsIm5iZiI6MTY3Njc0MDc1MiwiaWF0IjoxNjc2NzQwNzUyLCJqdGkiOiJjZm9naDQ2bmRyYzRwODc0MHBjZyJ9.NSB3DoBjw4XNkiB8_Cnw29qioVp1Y9nRBj5To-k-_yldx74hquGEvni7ZyHio_eAoPRAbi8EdZNNtLyt0wSl3bLvzgsl4b5fvHnVfcp55i9lyUH0odDHnNXq7fWOcNqH4QaMVF2LcJ66AffjDgiePbR7ob8YyovgMDYjU4x73wkyrzNqAJBugbjgBX9g1wd-aGo9N1i0sYas6YBMRbQAhl4XrtVpZj-YQkHePYYrU6Xt6DiE5vhtAuiDRqD4B9gXOStHV6VtLVnjAFJSFidYAXjV0GKzdaOl84yddNL2ZSwFf6JcD4AJ7AGuIlXmA7EC5yC5pwKjVNcFopVZjUKjyA"
 
-    newToken, err = rainbowhatto.RefreshToken(rainbowhatto.RSA(), oldToken, rainbowhatto.Config{
+    newToken, err := rainbowhatto.RefreshToken(rainbowhatto.RSA(), oldToken, rainbowhatto.Config{
 		RSA: &rainbowhatto.RSAConfig{
 			PrivateKey: "./private_key.pem",
 			PublicKey:  "./public_key.pem",
